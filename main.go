@@ -2,15 +2,30 @@ package main
 
 import (
 	"fmt"
+	"go-server/tasks"
 	"net/http"
+	"strings"
 )
 
+var entityHandlers = map[string]http.HandlerFunc{
+	"task": tasks.TaskHandler,
+}
+
 func handler(w http.ResponseWriter, r *http.Request) {
-	if r.Method == http.MethodGet {
-		fmt.Fprintf(w, "Hello World!")
-	} else {
+	if r.Method != http.MethodGet {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		fmt.Fprintf(w, "Method Not Allowed!")
+		return
+	}
+
+	path := strings.Trim(r.URL.Path, "/")
+	parts := strings.Split(path, "/")
+	entity := parts[0]
+
+	if handler, ok := entityHandlers[entity]; ok {
+		handler(w, r)
+	} else {
+		fmt.Fprintf(w, "Hello World!")
 	}
 }
 
